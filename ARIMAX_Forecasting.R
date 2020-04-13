@@ -19,21 +19,26 @@ library(forecast)
 
 # Importar datos
 sales_x <- read_excel("data.xlsx")
-sales_x <- ts(sales, start = c(2014,01), frequency = 12)
+sales_x <- ts(sales_x, start = c(2014,01), frequency = 12)
 
 # Grafico de datos en niveles
 ts.plot(scale(sales_x), col = c(1, 2),  lwd = c(1, 2)) #la roja IGAE
 
-# Prueba de estacionariedad
-ur.kpss(sales_x$SALES) %>% summary() #los datos en niveles no son estacionarios
-ur.kpss(diff(sales_x$...2)) %>% summary() # los datos diferenciados si son estacionarios
+# Prueba de estacionariedad para las ventas
+ur.kpss(sales_x[,1]) %>% summary() #los datos en niveles no son estacionarios
+ur.kpss(diff(sales_x[,1])) %>% summary() # los datos diferenciados si son estacionarios
+
+# Prueba de estacionariedad para el IGAE
+ur.kpss(sales_x[,2]) %>% summary() #los datos en niveles no son estacionarios
+ur.kpss(diff(sales_x[,2])) %>% summary() # los datos diferenciados si son estacionarios
 
 ##
-# Modelo ARIMA
+# Modelo ARIMAX
 ##
 
 # AR representa una regresion de la variable cotra valores pasados de ella misma
 # MA representa la media movil ponderada de los errores pasados del pronóstico.
+# X representa una variable o un conjunto de variables explicativas
 
 # Combinando los dos modelos
 # p = parte autorregresiva
@@ -41,12 +46,10 @@ ur.kpss(diff(sales_x$...2)) %>% summary() # los datos diferenciados si son estac
 # q = parte media movil
 
 # Selección automatica del modelo ARIMA
-igae <- sales_x$...2
-modelo_x <- auto.arima(sales_x[,"SALES"], xreg = igae, seasonal=T, stepwise=T, approximation=T)
-checkresiduals(modelo_x) # Los residuales estan correlacionados
+modelo_x <- auto.arima(sales_x[,1], xreg = sales_x[,2], seasonal=T, stepwise=T, approximation=T)
+summary(modelo_x)
+checkresiduals(modelo_x) # Los residuales no estan correlacionados
 
 # Pronóstico
-autoplot(forecast(modelo_x, xreg = igae, h=9))
-
-?forecast
+autoplot(forecast(modelo_x, xreg = rep(mean(sales_x[,2]),9), h=9))
 
