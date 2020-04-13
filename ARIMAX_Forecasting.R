@@ -52,4 +52,3 @@ checkresiduals(modelo_x) # Los residuales no estan correlacionados
 
 # Pronóstico
 autoplot(forecast(modelo_x, xreg = rep(mean(sales_x[,2]),9), h=9))
-
